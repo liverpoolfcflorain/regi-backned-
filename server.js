@@ -95,7 +95,6 @@ if (
         "Missing Supabase environment variables."
     );
 
-    process.exit(1);
 
 }
 
@@ -3684,26 +3683,6 @@ Open the admin dashboard to review this registration.
 
 
 
-app.listen(
-
-    PORT,
-
-    async () => {
-
-        console.log(
-
-            `✓ ACMUN backend running on port ${PORT}`
-
-        );
-
-
-        await verifySMTP();
-
-    }
-
-);
-
-
 
 app.use((req, res) => {
 
@@ -3726,3 +3705,6 @@ app.use((req, res) => {
     });
 
 });
+
+
+export default app;
