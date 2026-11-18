@@ -1,0 +1,23 @@
+{
+    "name": "acmun-backend",
+    "version": "1.0.0",
+    "type": "module",
+    "main": "server.js",
+    "scripts": {
+        "start": "node admin.js",
+        "dev": "nodemon admin.js"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.112.3",
+        "cookie-parser": "^1.4.7",
+        "cors": "^2.8.6",
+        "dotenv": "^17.4.2",
+        "express": "^5.2.1",
+        "express-rate-limit": "^8.6.2",
+        "helmet": "^8.3.0",
+        "nodemailer": "^9.0.5"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.14"
+    }
+}
