@@ -19,7 +19,11 @@ const app = express();
 const PORT =
     process.env.PORT || 3000;
 
-
+    app.use((req, res, next) => {
+        console.log("Incoming Origin:", JSON.stringify(req.headers.origin));
+        console.log("Configured FRONTEND_URL:", JSON.stringify(process.env.FRONTEND_URL));
+        next();
+    });
 
 app.use(
     helmet()
@@ -42,7 +46,7 @@ app.use(
         ]
     })
 );
-console.log(process.env.FRONTEND_URL);
+console.log("Configured FRONTEND_URL:", JSON.stringify(process.env.FRONTEND_URL));
 
 app.use(
     express.json({
