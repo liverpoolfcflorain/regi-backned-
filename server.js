@@ -146,10 +146,6 @@ const transporter =
             process.env.SMTP_SECURE ===
             "true",
 
-        pool: true,
-        maxConnections: 3,
-        maxMessages: 100,
-
         auth: {
 
             user:
@@ -206,9 +202,6 @@ async function verifySMTP() {
     }
 
 }
-
-// Verify connectivity when the server instance starts. This does not send mail.
-verifySMTP();
 
 
 /* ==========================================================
@@ -3173,69 +3166,74 @@ app.post("/api/register", async (req, res) => {
             });
           }
           
-        /* -----------------------------
-           Insert delegates before queueing email
-        ----------------------------- */
+          // Respond first.
+          res.status(201).json({
+            success: true,
+            message: "Registration submitted successfully.",
+            registrationId: registration.id
+          });
+          
+          // Send emails after responding.
+          setImmediate(async () => {
+            try {
+              await sendRegistrationReceivedEmail(registration);
+              console.log(
+                "Registration email sent:",
+                registration.head_delegate_email
+              );
+            } catch (error) {
+              console.error(
+                "Registration email failed:",
+                registration.id,
+                error
+              );
+            }
+          
+            try {
+              await notifySecretariat(registration);
+              console.log(
+                "Secretariat notification sent:",
+                registration.id
+              );
+            } catch (error) {
+              console.error(
+                "Secretariat notification failed:",
+                registration.id,
+                error
+              );
+            }
+          });
+          
+          
+        console.log(delegates);
+
         if (delegates.length > 0) {
-            const delegateRows = delegates.map((delegate) => ({
+
+            const delegateRows = delegates.map(delegate => ({
                 registration_id: registration.id,
+
                 delegate_name: delegate.name,
                 delegate_email: delegate.email,
                 delegate_phone: delegate.phone,
                 delegate_committee: delegate.committee
             }));
 
-            const { error: delegateError } = await supabase
-                .from("delegates")
-                .insert(delegateRows);
+            const { error: delegateError } =
+                await supabase
+                    .from("delegates")
+                    .insert(delegateRows);
 
-            if (delegateError) {
-                console.error("Delegate insert failed:", delegateError);
-
-                return res.status(500).json({
-                    success: false,
-                    error: "Unable to save delegates."
-                });
-            }
-        }
-
-        /* -----------------------------
-           Queue email jobs, do not block on SMTP
-        ----------------------------- */
-        const emailJobs = [
-            {
-                job_type: "registration_received",
-                payload: { registration }
-            },
-            {
-                job_type: "notify_secretariat",
-                payload: { registration }
-            }
-        ];
-
-        const { error: emailJobError } = await supabase
-            .from("email_jobs")
-            .insert(emailJobs);
-
-        if (emailJobError) {
-            console.error("Email jobs could not be queued:", emailJobError);
-
-            return res.status(500).json({
-                success: false,
-                error: "Registration saved, but email notifications could not be queued.",
-                registrationId: registration.id
-            });
+            if (delegateError)
+                throw delegateError;
         }
 
         /* -----------------------------
            Success
         ----------------------------- */
 
-        return res.status(201).json({
+        return res.json({
 
             success: true,
-
-            message: "Registration submitted successfully.",
 
             registrationId: registration.id,
 
@@ -3258,147 +3256,6 @@ app.post("/api/register", async (req, res) => {
 
     }
 });
-
-async function processEmailJob(job) {
-    const registration = job.payload?.registration;
-
-    if (!registration) {
-        throw new Error("Email job is missing registration payload.");
-    }
-
-    if (job.job_type === "registration_received") {
-        return sendRegistrationReceivedEmail(registration);
-    }
-
-    if (job.job_type === "notify_secretariat") {
-        return notifySecretariat(registration);
-    }
-
-    throw new Error(`Unknown email job type: ${job.job_type}`);
-}
-
-// Email worker handler.
-// Vercel Cron calls this route with GET. Manual/external workers may use POST.
-async function processEmailJobs(req, res) {
-    const workerSecret = process.env.EMAIL_WORKER_SECRET;
-    const cronSecret = process.env.CRON_SECRET;
-
-    const suppliedWorkerSecret = req.headers["x-email-worker-secret"];
-    const suppliedAuthorization = req.headers.authorization;
-    const suppliedCronSecret = suppliedAuthorization?.startsWith("Bearer ")
-        ? suppliedAuthorization.slice("Bearer ".length)
-        : null;
-
-    const workerAuthorized = workerSecret && suppliedWorkerSecret === workerSecret;
-    const cronAuthorized = cronSecret && suppliedCronSecret === cronSecret;
-
-    // If either secret is configured, require one valid authentication method.
-    if ((workerSecret || cronSecret) && !workerAuthorized && !cronAuthorized) {
-        return res.status(401).json({
-            success: false,
-            error: "Unauthorized email worker request."
-        });
-    }
-
-    try {
-        // Recover jobs left in processing by a timed-out serverless invocation.
-        // Jobs processing for more than 10 minutes can safely be retried.
-        await supabase
-            .from("email_jobs")
-            .update({ status: "pending" })
-            .eq("status", "processing")
-            .lt(
-                "created_at",
-                new Date(Date.now() - 10 * 60 * 1000).toISOString()
-            );
-
-        const { data: jobs, error: fetchError } = await supabase
-            .from("email_jobs")
-            .select("*")
-            .eq("status", "pending")
-            .lt("attempts", 5)
-            .order("created_at", { ascending: true })
-            .limit(10);
-
-        if (fetchError) throw fetchError;
-
-        const results = [];
-
-        for (const job of jobs || []) {
-            // Claim the job atomically. A second worker will receive no row.
-            const { data: claimedJob, error: claimError } = await supabase
-                .from("email_jobs")
-                .update({
-                    status: "processing",
-                    attempts: Number(job.attempts || 0) + 1
-                })
-                .eq("id", job.id)
-                .eq("status", "pending")
-                .select()
-                .maybeSingle();
-
-            if (claimError) throw claimError;
-            if (!claimedJob) continue;
-
-            try {
-                await processEmailJob(claimedJob);
-
-                const { error: sentUpdateError } = await supabase
-                    .from("email_jobs")
-                    .update({
-                        status: "sent",
-                        sent_at: new Date().toISOString(),
-                        last_error: null
-                    })
-                    .eq("id", job.id);
-
-                if (sentUpdateError) throw sentUpdateError;
-
-                results.push({ id: job.id, status: "sent" });
-            } catch (error) {
-                console.error(`Email job ${job.id} failed:`, error);
-
-                const nextStatus = Number(job.attempts || 0) + 1 >= 5
-                    ? "failed"
-                    : "pending";
-
-                await supabase
-                    .from("email_jobs")
-                    .update({
-                        status: nextStatus,
-                        last_error: error instanceof Error
-                            ? error.message
-                            : String(error)
-                    })
-                    .eq("id", job.id);
-
-                results.push({
-                    id: job.id,
-                    status: nextStatus,
-                    error: error instanceof Error
-                        ? error.message
-                        : String(error)
-                });
-            }
-        }
-
-        return res.json({
-            success: true,
-            processed: results.length,
-            results
-        });
-    } catch (error) {
-        console.error("Email worker failed:", error);
-
-        return res.status(500).json({
-            success: false,
-            error: "Unable to process email jobs."
-        });
-    }
-}
-
-app.get("/api/process-email-jobs", processEmailJobs);
-app.post("/api/process-email-jobs", processEmailJobs);
 
 async function sendPaymentEmail({
 
@@ -3712,47 +3569,92 @@ ACMUNI XVII SECRETARIAT
 
 
 async function sendRegistrationReceivedEmail(registration) {
+
     const recipients = [
         registration.staff_advisor_email,
         registration.head_delegate_email
     ].filter(Boolean);
 
     if (recipients.length === 0) {
-        throw new Error("No registration email recipients were provided.");
+        return;
     }
 
-    const html = `
+const html = `
 <!DOCTYPE html>
 <html>
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:30px;">
-<div style="max-width:700px;margin:auto;background:white;padding:40px;border-radius:10px;">
+
+<div style="
+max-width:700px;
+margin:auto;
+background:white;
+padding:40px;
+border-radius:10px;
+">
+
 <h1>ACMUN XVII</h1>
-<p>Dear ${escapeEmailHTML(registration.head_delegate_name)},</p>
-<p>Thank you for registering for ACMUN XVII.</p>
-<p>Your registration has been successfully received and is now under review by the Secretariat.</p>
+
+<p>Dear ${registration.head_delegate_name},</p>
+
+<p>
+Thank you for registering for ACMUN XVII.
+</p>
+
+<p>
+Your registration has been successfully received and is now under review by the Secretariat.
+</p>
+
 <hr>
+
 <h2>Registration Details</h2>
-<p><strong>Reference:</strong> ACMUN-${escapeEmailHTML(registration.id)}</p>
-<p><strong>Institution:</strong> ${escapeEmailHTML(registration.institution_name)}</p>
-<p><strong>Delegation:</strong> ${escapeEmailHTML(registration.delegation_name)}</p>
-<p><strong>Delegates:</strong> ${escapeEmailHTML(registration.number_of_delegates)}</p>
+
+<p><strong>Reference:</strong> ACMUN-${registration.id}</p>
+
+<p><strong>Institution:</strong> ${registration.institution_name}</p>
+
+<p><strong>Delegation:</strong> ${registration.delegation_name}</p>
+
+<p><strong>Delegates:</strong> ${registration.number_of_delegates}</p>
+
 <hr>
-<p>You will receive another email once your registration has been reviewed.</p>
+
+<p>
+You will receive another email once your registration has been reviewed.
+</p>
+
 <br>
-<p>Regards,<br>ACMUN XVII Secretariat</p>
+
+<p>
+Regards,<br>
+ACMUNI XVII Secretariat
+</p>
+
 </div>
+
 </body>
 </html>
 `;
 
-    console.log("Sending registration email to:", recipients);
+  try {
+    await transporter.sendMail({
 
-    return transporter.sendMail({
         from: process.env.SMTP_FROM,
+
         to: recipients.join(","),
+
         subject: "ACMUN XVII Registration Received",
+
         html
-    });
+  })}catch (error) {
+     
+        console.error(
+            "Registration email failed:",
+            registration.id,
+            error
+          );
+    
+} 
+
 }
 
 export async function notifySecretariat(registration) {
