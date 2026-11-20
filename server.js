@@ -3277,13 +3277,23 @@ async function processEmailJob(job) {
     throw new Error(`Unknown email job type: ${job.job_type}`);
 }
 
-// Call this endpoint from a cron job or separate worker.
-// Protect it with EMAIL_WORKER_SECRET in production.
-app.post("/api/process-email-jobs", async (req, res) => {
-    const suppliedSecret = req.headers["x-email-worker-secret"];
-    const expectedSecret = process.env.EMAIL_WORKER_SECRET;
+// Email worker handler.
+// Vercel Cron calls this route with GET. Manual/external workers may use POST.
+async function processEmailJobs(req, res) {
+    const workerSecret = process.env.EMAIL_WORKER_SECRET;
+    const cronSecret = process.env.CRON_SECRET;
 
-    if (expectedSecret && suppliedSecret !== expectedSecret) {
+    const suppliedWorkerSecret = req.headers["x-email-worker-secret"];
+    const suppliedAuthorization = req.headers.authorization;
+    const suppliedCronSecret = suppliedAuthorization?.startsWith("Bearer ")
+        ? suppliedAuthorization.slice("Bearer ".length)
+        : null;
+
+    const workerAuthorized = workerSecret && suppliedWorkerSecret === workerSecret;
+    const cronAuthorized = cronSecret && suppliedCronSecret === cronSecret;
+
+    // If either secret is configured, require one valid authentication method.
+    if ((workerSecret || cronSecret) && !workerAuthorized && !cronAuthorized) {
         return res.status(401).json({
             success: false,
             error: "Unauthorized email worker request."
@@ -3291,6 +3301,17 @@ app.post("/api/process-email-jobs", async (req, res) => {
     }
 
     try {
+        // Recover jobs left in processing by a timed-out serverless invocation.
+        // Jobs processing for more than 10 minutes can safely be retried.
+        await supabase
+            .from("email_jobs")
+            .update({ status: "pending" })
+            .eq("status", "processing")
+            .lt(
+                "created_at",
+                new Date(Date.now() - 10 * 60 * 1000).toISOString()
+            );
+
         const { data: jobs, error: fetchError } = await supabase
             .from("email_jobs")
             .select("*")
@@ -3304,6 +3325,7 @@ app.post("/api/process-email-jobs", async (req, res) => {
         const results = [];
 
         for (const job of jobs || []) {
+            // Claim the job atomically. A second worker will receive no row.
             const { data: claimedJob, error: claimError } = await supabase
                 .from("email_jobs")
                 .update({
@@ -3321,7 +3343,7 @@ app.post("/api/process-email-jobs", async (req, res) => {
             try {
                 await processEmailJob(claimedJob);
 
-                await supabase
+                const { error: sentUpdateError } = await supabase
                     .from("email_jobs")
                     .update({
                         status: "sent",
@@ -3330,19 +3352,33 @@ app.post("/api/process-email-jobs", async (req, res) => {
                     })
                     .eq("id", job.id);
 
+                if (sentUpdateError) throw sentUpdateError;
+
                 results.push({ id: job.id, status: "sent" });
             } catch (error) {
                 console.error(`Email job ${job.id} failed:`, error);
 
+                const nextStatus = Number(job.attempts || 0) + 1 >= 5
+                    ? "failed"
+                    : "pending";
+
                 await supabase
                     .from("email_jobs")
                     .update({
-                        status: Number(job.attempts || 0) + 1 >= 5 ? "failed" : "pending",
-                        last_error: error.message
+                        status: nextStatus,
+                        last_error: error instanceof Error
+                            ? error.message
+                            : String(error)
                     })
                     .eq("id", job.id);
 
-                results.push({ id: job.id, status: "failed", error: error.message });
+                results.push({
+                    id: job.id,
+                    status: nextStatus,
+                    error: error instanceof Error
+                        ? error.message
+                        : String(error)
+                });
             }
         }
 
@@ -3353,12 +3389,16 @@ app.post("/api/process-email-jobs", async (req, res) => {
         });
     } catch (error) {
         console.error("Email worker failed:", error);
+
         return res.status(500).json({
             success: false,
             error: "Unable to process email jobs."
         });
     }
-});
+}
+
+app.get("/api/process-email-jobs", processEmailJobs);
+app.post("/api/process-email-jobs", processEmailJobs);
 
 async function sendPaymentEmail({
 
