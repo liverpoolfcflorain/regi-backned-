@@ -3179,7 +3179,7 @@ app.post("/api/register", async (req, res) => {
               await sendRegistrationReceivedEmail(registration);
               console.log(
                 "Registration email sent:",
-                registration.id
+                registration.head_delegate_email
               );
             } catch (error) {
               console.error(
