@@ -3635,6 +3635,7 @@ ACMUNI XVII Secretariat
 </html>
 `;
 
+  try {
     await transporter.sendMail({
 
         from: process.env.SMTP_FROM,
@@ -3648,9 +3649,29 @@ ACMUNI XVII Secretariat
             "Registration email sent:",
             registration.head_delegate_email
           );
-    });
+    }) catch (error) {
+        console.error(
+            "Registration email failed:",
+            registration.id,
+            error
+          );
+    }
+} catch (error) {
+        console.error(
+            "Registration email failed:",
+            registration.id,
+            error
+          );
+    }
 
+} catch (error) {
+    console.error(
+        "Registration email failed:",
+        registration.id,
+        error
+      );
 }
+
 
 export async function notifySecretariat(registration) {
 
