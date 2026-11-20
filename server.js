@@ -3644,7 +3644,10 @@ ACMUNI XVII Secretariat
         subject: "ACMUN XVII Registration Received",
 
         html
-
+        console.log(
+            "Registration email sent:",
+            registration.head_delegate_email
+          );
     });
 
 }
