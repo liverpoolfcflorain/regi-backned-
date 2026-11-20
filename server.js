@@ -3579,7 +3579,7 @@ async function sendRegistrationReceivedEmail(registration) {
         return;
     }
 
-    const html = `
+const html = `
 <!DOCTYPE html>
 <html>
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:30px;">
@@ -3645,33 +3645,17 @@ ACMUNI XVII Secretariat
         subject: "ACMUN XVII Registration Received",
 
         html
-        console.log(
-            "Registration email sent:",
-            registration.head_delegate_email
-          );
-    }) catch (error) {
+  })}catch (error) {
+     
         console.error(
             "Registration email failed:",
             registration.id,
             error
           );
-    }
-} catch (error) {
-        console.error(
-            "Registration email failed:",
-            registration.id,
-            error
-          );
-    }
+    
+} 
 
-} catch (error) {
-    console.error(
-        "Registration email failed:",
-        registration.id,
-        error
-      );
 }
-
 
 export async function notifySecretariat(registration) {
 
