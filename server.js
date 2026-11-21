@@ -3216,6 +3216,8 @@ Open the admin dashboard to review this registration.
 
 function healthResponse(req, res) {
 
+
+    console.log("i am alive");
     return res.status(200).json({
 
         success: true,
@@ -3225,6 +3227,8 @@ function healthResponse(req, res) {
         service: "acmun-backend",
 
         timestamp: new Date().toISOString()
+
+
 
     });
 
