@@ -3702,7 +3702,7 @@ p {
 
 <div class="hero">
 
- <img src='acmun.png'>
+ <img src='./acmun.png'>
 
 </div>
 
