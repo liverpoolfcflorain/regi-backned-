@@ -3210,6 +3210,102 @@ Open the admin dashboard to review this registration.
 
 
 
+/* ==========================================================
+   HEALTH CHECK / KEEP-ALIVE
+========================================================== */
+
+function healthResponse(req, res) {
+
+    return res.status(200).json({
+
+        success: true,
+
+        status: "ok",
+
+        service: "acmun-backend",
+
+        timestamp: new Date().toISOString()
+
+    });
+
+}
+
+
+app.get(
+    "/health",
+    healthResponse
+);
+
+
+app.get(
+    "/api/health",
+    healthResponse
+);
+
+
+const HEALTHCHECK_URL =
+    process.env.HEALTHCHECK_URL ||
+    process.env.RENDER_EXTERNAL_URL ||
+    process.env.APP_URL;
+
+
+async function keepServerAwake() {
+
+    if (!HEALTHCHECK_URL) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const response = await fetch(
+            `${HEALTHCHECK_URL.replace(/\/$/, "")}/health`,
+            {
+                method: "GET",
+                headers: {
+                    "User-Agent": "ACMUN-health-check"
+                }
+            }
+        );
+
+
+        if (!response.ok) {
+
+            console.warn(
+                `Health check returned HTTP ${response.status}.`
+            );
+
+        }
+
+    } catch (error) {
+
+        console.warn(
+            "Keep-alive health check failed:",
+            error.message
+        );
+
+    }
+
+}
+
+
+if (
+    HEALTHCHECK_URL &&
+    process.env.DISABLE_KEEP_ALIVE !== "true"
+) {
+
+    const keepAliveTimer = setInterval(
+        keepServerAwake,
+        15 * 1000
+    );
+
+    keepAliveTimer.unref?.();
+
+}
+
+
 app.use((req, res) => {
 
     console.log(
