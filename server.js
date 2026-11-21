@@ -19,11 +19,11 @@ const app = express();
 const PORT =
     process.env.PORT || 3000;
 
-    app.use((req, res, next) => {
-        console.log("Incoming Origin:", JSON.stringify(req.headers.origin));
-        console.log("Configured FRONTEND_URL:", JSON.stringify(process.env.FRONTEND_URL));
-        next();
-    });
+app.use((req, res, next) => {
+    console.log("Incoming Origin:", JSON.stringify(req.headers.origin));
+    console.log("Configured FRONTEND_URL:", JSON.stringify(process.env.FRONTEND_URL));
+    next();
+});
 
 app.use(
     helmet()
@@ -110,7 +110,7 @@ const supabase =
 
         SUPABASE_SERVICE_ROLE_KEY,
 
-        
+
 
         {
 
@@ -687,10 +687,10 @@ app.get(
             const {
 
                 data:
-                    registration,
+                registration,
 
                 error:
-                    registrationError
+                registrationError
 
             } =
                 await supabase
@@ -731,10 +731,10 @@ app.get(
             const {
 
                 data:
-                    delegates,
+                delegates,
 
                 error:
-                    delegateError
+                delegateError
 
             } =
                 await supabase
@@ -896,10 +896,10 @@ app.put(
             const {
 
                 data:
-                    existingRegistration,
+                existingRegistration,
 
                 error:
-                    existingError
+                existingError
 
             } =
                 await supabase
@@ -942,86 +942,86 @@ app.put(
              */
 
             const updateData =
-                {
+            {
 
-                    staff_advisor_name:
-                        registration.staff_advisor_name
-                            ?.trim(),
+                staff_advisor_name:
+                    registration.staff_advisor_name
+                        ?.trim(),
 
-                    staff_advisor_email:
-                        registration.staff_advisor_email
-                            ?.trim(),
+                staff_advisor_email:
+                    registration.staff_advisor_email
+                        ?.trim(),
 
-                    staff_advisor_phone:
-                        registration.staff_advisor_phone
-                            ?.trim(),
+                staff_advisor_phone:
+                    registration.staff_advisor_phone
+                        ?.trim(),
 
-                    institution_name:
-                        registration.institution_name
-                            ?.trim(),
+                institution_name:
+                    registration.institution_name
+                        ?.trim(),
 
-                    institution_city:
-                        registration.institution_city
-                            ?.trim(),
+                institution_city:
+                    registration.institution_city
+                        ?.trim(),
 
-                    institution_country:
-                        registration.institution_country
-                            ?.trim(),
+                institution_country:
+                    registration.institution_country
+                        ?.trim(),
 
-                    delegation_name:
-                        registration.delegation_name
-                            ?.trim(),
+                delegation_name:
+                    registration.delegation_name
+                        ?.trim(),
 
-                    number_of_delegates:
-                        Number(
-                            registration.number_of_delegates
+                number_of_delegates:
+                    Number(
+                        registration.number_of_delegates
+                    ),
+
+                head_delegate_name:
+                    registration.head_delegate_name
+                        ?.trim(),
+
+                head_delegate_committee:
+                    registration.head_delegate_committee
+                        ?.trim(),
+
+                head_delegate_email:
+                    registration.head_delegate_email
+                        ?.trim(),
+
+                head_delegate_phone:
+                    registration.head_delegate_phone
+                        ?.trim(),
+
+                country_preference_1:
+                    registration.country_preference_1
+                        ?.trim(),
+
+                country_preference_2:
+                    registration.country_preference_2
+                        ?.trim(),
+
+                money:
+                    Number(
+                        registration.money
+                    ) || 0,
+
+                status:
+                    complete
+                        ? "Completed"
+                        : (
+                            registration.status ||
+                            "Pending"
                         ),
 
-                    head_delegate_name:
-                        registration.head_delegate_name
-                            ?.trim(),
+                deadline:
+                    registration.deadline
+                        ? new Date(
+                            registration.deadline
+                        ).toISOString()
+                        : null
 
-                    head_delegate_committee:
-                        registration.head_delegate_committee
-                            ?.trim(),
-
-                    head_delegate_email:
-                        registration.head_delegate_email
-                            ?.trim(),
-
-                    head_delegate_phone:
-                        registration.head_delegate_phone
-                            ?.trim(),
-
-                    country_preference_1:
-                        registration.country_preference_1
-                            ?.trim(),
-
-                    country_preference_2:
-                        registration.country_preference_2
-                            ?.trim(),
-
-                    money:
-                        Number(
-                            registration.money
-                        ) || 0,
-
-                    status:
-                        complete
-                            ? "Completed"
-                            : (
-                                registration.status ||
-                                "Pending"
-                            ),
-
-                    deadline:
-                        registration.deadline
-                            ? new Date(
-                                registration.deadline
-                            ).toISOString()
-                            : null
-
-                };
+            };
 
 
             /*
@@ -1031,7 +1031,7 @@ app.put(
             const {
 
                 error:
-                    updateError
+                updateError
 
             } =
                 await supabase
@@ -1078,43 +1078,43 @@ app.put(
 
 
                 const delegateUpdate =
-                    {
+                {
 
-                        delegate_name:
-                            (
-                                delegate.delegate_name ||
-                                ""
-                            )
+                    delegate_name:
+                        (
+                            delegate.delegate_name ||
+                            ""
+                        )
                             .trim(),
 
-                        delegate_committee:
-                            (
-                                delegate.delegate_committee ||
-                                ""
-                            )
+                    delegate_committee:
+                        (
+                            delegate.delegate_committee ||
+                            ""
+                        )
                             .trim(),
 
-                        delegate_email:
-                            (
-                                delegate.delegate_email ||
-                                ""
-                            )
+                    delegate_email:
+                        (
+                            delegate.delegate_email ||
+                            ""
+                        )
                             .trim(),
 
-                        delegate_phone:
-                            (
-                                delegate.delegate_phone ||
-                                ""
-                            )
+                    delegate_phone:
+                        (
+                            delegate.delegate_phone ||
+                            ""
+                        )
                             .trim()
 
-                    };
+                };
 
 
                 const {
 
                     error:
-                        delegateUpdateError
+                    delegateUpdateError
 
                 } =
                     await supabase
@@ -1198,10 +1198,10 @@ app.put(
             const {
 
                 data:
-                    finalRegistration,
+                finalRegistration,
 
                 error:
-                    finalRegistrationError
+                finalRegistrationError
 
             } =
                 await supabase
@@ -1234,10 +1234,10 @@ app.put(
             const {
 
                 data:
-                    finalDelegates,
+                finalDelegates,
 
                 error:
-                    finalDelegateError
+                finalDelegateError
 
             } =
                 await supabase
@@ -1309,7 +1309,7 @@ app.put(
             const {
 
                 error:
-                    hashUpdateError
+                hashUpdateError
 
             } =
                 await supabase
@@ -1345,8 +1345,8 @@ app.put(
 
 
             const delegateRows = delegates
-    .map(
-        (delegate) => `
+                .map(
+                    (delegate) => `
             <tr>
 
                 <td>
@@ -1359,7 +1359,7 @@ app.put(
 
                 <td>
                     ${escapeEmailHTML(
-                        delegate.delegate_committee||
+                        delegate.delegate_committee ||
                         "Pending"
                     )}
                 </td>
@@ -1373,10 +1373,10 @@ app.put(
 
             </tr>
         `
-    )
-    .join("");
+                )
+                .join("");
 
-    const emailHTML = `
+            const emailHTML = `
     <!DOCTYPE html>
     <html lang="en">
     
@@ -1947,8 +1947,8 @@ app.put(
                     Dear
                     <strong>
                         ${escapeEmailHTML(
-                            finalRegistration.head_delegate_name
-                        )}
+                finalRegistration.head_delegate_name
+            )}
                     </strong>,
     
                 </p>
@@ -2004,8 +2004,8 @@ app.put(
                         <td>
     
                             ${escapeEmailHTML(
-                                finalRegistration.institution_name
-                            )}
+                finalRegistration.institution_name
+            )}
     
                         </td>
     
@@ -2021,8 +2021,8 @@ app.put(
                         <td>
     
                             ${escapeEmailHTML(
-                                finalRegistration.delegation_name
-                            )}
+                finalRegistration.delegation_name
+            )}
     
                         </td>
     
@@ -2038,8 +2038,8 @@ app.put(
                         <td>
     
                             ${escapeEmailHTML(
-                                finalRegistration.head_delegate_name
-                            )}
+                finalRegistration.head_delegate_name
+            )}
     
                         </td>
     
@@ -2185,7 +2185,7 @@ app.put(
     </html>
     `;
 
-            
+
 
             const recipients =
                 [
@@ -2198,9 +2198,9 @@ app.put(
 
                 ]
 
-                .filter(
-                    Boolean
-                );
+                    .filter(
+                        Boolean
+                    );
 
 
             if (
@@ -2273,6 +2273,111 @@ app.put(
 /* ==========================================================
    EMAIL HTML ESCAPING
 ========================================================== */
+
+/* ==========================================================
+   COMPLETION EMAIL
+========================================================== */
+
+async function sendCompletionEmail({
+    registration,
+    delegates = []
+}) {
+
+    if (!registration) {
+        throw new Error("Registration data is required to send the completion email.");
+    }
+
+    const recipients = [
+        registration.staff_advisor_email,
+        registration.head_delegate_email
+    ]
+        .map(email => String(email || "").trim())
+        .filter(email => email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+
+    if (recipients.length === 0) {
+        throw new Error("No valid email recipients found.");
+    }
+
+    const delegateRows = delegates.length
+        ? delegates.map(delegate => `
+            <tr>
+                <td>${escapeEmailHTML(delegate.delegate_name || "—")}</td>
+                <td>${escapeEmailHTML(delegate.delegate_committee || "Pending")}</td>
+                <td>${escapeEmailHTML(delegate.allotment || "Pending")}</td>
+            </tr>
+        `).join("")
+        : `
+            <tr>
+                <td colspan="3">No delegate details available.</td>
+            </tr>
+        `;
+
+    const emailHTML = `
+        <!doctype html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body { margin: 0; padding: 24px 12px; background: #f4f7f9; color: #18303d; font-family: Arial, Helvetica, sans-serif; }
+                .card { max-width: 680px; margin: 0 auto; overflow: hidden; background: #fff; border: 1px solid #dfe7ec; border-radius: 12px; }
+                .header { padding: 32px 28px; color: #fff; background: #073b55; }
+                .header h1 { margin: 0 0 8px; font-size: 24px; }
+                .header p { margin: 0; color: #d9e7ed; }
+                .content { padding: 28px; }
+                .content p { line-height: 1.6; }
+                .summary { margin: 22px 0; padding: 16px; background: #f4f7f9; border-left: 4px solid #c79a45; }
+                .summary strong { color: #073b55; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+                th, td { padding: 11px 10px; text-align: left; border-bottom: 1px solid #e4ebef; }
+                th { color: #6d7d87; font-size: 11px; letter-spacing: .5px; text-transform: uppercase; }
+                .footer { padding: 20px 28px; color: #6d7d87; background: #f8fafb; font-size: 12px; line-height: 1.5; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <div class="header">
+                    <h1>Registration Confirmed</h1>
+                    <p>ACMUN XVII Secretariat</p>
+                </div>
+                <div class="content">
+                    <p>Dear Delegate,</p>
+                    <p>Your delegation registration has been completed successfully. Please find the current delegation details below.</p>
+                    <div class="summary">
+                        <strong>${escapeEmailHTML(registration.delegation_name || "Delegation")}</strong><br>
+                        ${escapeEmailHTML(registration.institution_name || "Institution")}<br>
+                        Status: <strong>${escapeEmailHTML(registration.status || "Completed")}</strong>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Delegate</th>
+                                <th>Committee</th>
+                                <th>Allotment</th>
+                            </tr>
+                        </thead>
+                        <tbody>${delegateRows}</tbody>
+                    </table>
+                    <p>If you have any questions, please contact the ACMUN XVII Secretariat.</p>
+                </div>
+                <div class="footer">Annual Conference Model United Nations<br>ACMUN XVII Secretariat</div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to: recipients.join(","),
+        subject: `ACMUN XVII – Registration Confirmation | ${registration.delegation_name || "Delegation"}`,
+        html: emailHTML
+    });
+
+    return {
+        recipients
+    };
+}
+
 app.put(
 
     "/api/admin/registrations/:id",
@@ -2924,7 +3029,7 @@ app.post(
 
                     sameSite:
                         process.env.NODE_ENV ===
-                        "production"
+                            "production"
                             ? "none"
                             : "lax",
 
@@ -3044,7 +3149,7 @@ app.post(
 
                 sameSite:
                     process.env.NODE_ENV ===
-                    "production"
+                        "production"
                         ? "none"
                         : "lax"
 
@@ -3123,88 +3228,88 @@ app.post("/api/register", async (req, res) => {
         const {
             data: registration,
             error: registrationError
-          } = await supabase
+        } = await supabase
             .from("registrations")
             .insert({
-              staff_advisor_name: advisor.name.trim(),
-              staff_advisor_email: advisor.email.trim(),
-              staff_advisor_phone: advisor.phone.trim(),
-          
-              institution_name: institution.name.trim(),
-              institution_city: institution.city.trim(),
-              institution_country: institution.country.trim(),
-          
-              delegation_name: delegation.name.trim(),
-              number_of_delegates: Number(totalDelegateCount),
-          
-              head_delegate_name: headDelegate.name.trim(),
-              head_delegate_committee: headDelegate.committee.trim(),
-              head_delegate_email: headDelegate.email.trim(),
-              head_delegate_phone: headDelegate.phone.trim(),
-          
-              country_preference_1: preferences.first?.trim() || null,
-              country_preference_2: preferences.second?.trim() || null,
-          
-              status: "Pending"
+                staff_advisor_name: advisor.name.trim(),
+                staff_advisor_email: advisor.email.trim(),
+                staff_advisor_phone: advisor.phone.trim(),
+
+                institution_name: institution.name.trim(),
+                institution_city: institution.city.trim(),
+                institution_country: institution.country.trim(),
+
+                delegation_name: delegation.name.trim(),
+                number_of_delegates: Number(totalDelegateCount),
+
+                head_delegate_name: headDelegate.name.trim(),
+                head_delegate_committee: headDelegate.committee.trim(),
+                head_delegate_email: headDelegate.email.trim(),
+                head_delegate_phone: headDelegate.phone.trim(),
+
+                country_preference_1: preferences.first?.trim() || null,
+                country_preference_2: preferences.second?.trim() || null,
+
+                status: "Pending"
             })
             .select()
             .single();
-          
-          if (registrationError) {
+
+        if (registrationError) {
             console.error("Registration insert failed:", registrationError);
-          
+
             return res.status(500).json({
-              success: false,
-              error: "Unable to save registration."
+                success: false,
+                error: "Unable to save registration."
             });
-          }
-          
-          if (!registration) {
+        }
+
+        if (!registration) {
             return res.status(500).json({
-              success: false,
-              error: "Registration was not returned after saving."
+                success: false,
+                error: "Registration was not returned after saving."
             });
-          }
-          
-          // Respond first.
-          res.status(201).json({
+        }
+
+        // Respond first.
+        res.status(201).json({
             success: true,
             message: "Registration submitted successfully.",
             registrationId: registration.id
-          });
-          
-          // Send emails after responding.
-          setImmediate(async () => {
+        });
+
+        // Send emails after responding.
+        setImmediate(async () => {
             try {
-              await sendRegistrationReceivedEmail(registration);
-              console.log(
-                "Registration email sent:",
-                registration.head_delegate_email
-              );
+                await sendRegistrationReceivedEmail(registration);
+                console.log(
+                    "Registration email sent:",
+                    registration.head_delegate_email
+                );
             } catch (error) {
-              console.error(
-                "Registration email failed:",
-                registration.id,
-                error
-              );
+                console.error(
+                    "Registration email failed:",
+                    registration.id,
+                    error
+                );
             }
-          
+
             try {
-              await notifySecretariat(registration);
-              console.log(
-                "Secretariat notification sent:",
-                registration.id
-              );
+                await notifySecretariat(registration);
+                console.log(
+                    "Secretariat notification sent:",
+                    registration.id
+                );
             } catch (error) {
-              console.error(
-                "Secretariat notification failed:",
-                registration.id,
-                error
-              );
+                console.error(
+                    "Secretariat notification failed:",
+                    registration.id,
+                    error
+                );
             }
-          });
-          
-          
+        });
+
+
         console.log(delegates);
 
         if (delegates.length > 0) {
@@ -3456,8 +3561,8 @@ Payment Information
 Dear
 <strong>
 ${escapeEmailHTML(
-    registration.head_delegate_name
-)}
+        registration.head_delegate_name
+    )}
 </strong>,
 
 </p>
@@ -3496,8 +3601,8 @@ Institution:
 </strong>
 
 ${escapeEmailHTML(
-    registration.institution_name
-)}
+        registration.institution_name
+    )}
 
 </p>
 
@@ -3509,8 +3614,8 @@ Delegation:
 </strong>
 
 ${escapeEmailHTML(
-    registration.delegation_name
-)}
+        registration.delegation_name
+    )}
 
 </p>
 
@@ -3579,7 +3684,7 @@ async function sendRegistrationReceivedEmail(registration) {
         return;
     }
 
-const html = `
+    const html = `
 <!DOCTYPE html>
 <html>
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:30px;">
@@ -3635,25 +3740,26 @@ ACMUNI XVII Secretariat
 </html>
 `;
 
-  try {
-    await transporter.sendMail({
+    try {
+        await transporter.sendMail({
 
-        from: process.env.SMTP_FROM,
+            from: process.env.SMTP_FROM,
 
-        to: recipients.join(","),
+            to: recipients.join(","),
 
-        subject: "ACMUN XVII Registration Received",
+            subject: "ACMUN XVII Registration Received",
 
-        html
-  })}catch (error) {
-     
+            html
+        })
+    } catch (error) {
+
         console.error(
             "Registration email failed:",
             registration.id,
             error
-          );
-    
-} 
+        );
+
+    }
 
 }
 
