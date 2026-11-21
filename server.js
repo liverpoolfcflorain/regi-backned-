@@ -2738,6 +2738,20 @@ body {
 
 }
 
+.hero img {
+
+    width: 76px;
+
+    height: 76px;
+
+    object-fit: contain;
+
+    display: block;
+
+    margin: 0 auto;
+
+}
+
 .hero h1 {
 
     margin: 0;
@@ -2807,6 +2821,62 @@ p {
     color: white;
 
     font-size: 32px;
+
+}
+
+.bank-details {
+
+    margin: 30px 0;
+
+    padding: 25px;
+
+    background: #101010;
+
+    border:
+        1px solid
+        #2d2d2d;
+
+}
+
+.bank-details-title {
+
+    margin-bottom: 16px;
+
+    color: #b89b4e;
+
+    font-size: 14px;
+
+    letter-spacing: 2px;
+
+}
+
+.bank-details-row {
+
+    padding: 8px 0;
+
+    color: #dddddd;
+
+    font-size: 15px;
+
+    line-height: 1.5;
+
+    border-bottom: 1px solid #2d2d2d;
+
+}
+
+.bank-details-row:last-child {
+
+    border-bottom: none;
+
+}
+
+.bank-details-label {
+
+    display: inline-block;
+
+    min-width: 150px;
+
+    color: #9d9d9d;
 
 }
 
@@ -2880,6 +2950,48 @@ AMOUNT PAYABLE
 <div class="amount-value">
 
 PKR ${Number(amount).toLocaleString()}
+
+</div>
+
+</div>
+
+<div class="bank-details">
+
+<div class="bank-details-title">
+
+BANK TRANSFER DETAILS
+
+</div>
+
+<div class="bank-details-row">
+
+<span class="bank-details-label">Account Holder:</span>
+
+ASMA FALAK
+
+</div>
+
+<div class="bank-details-row">
+
+<span class="bank-details-label">Bank:</span>
+
+Meezan Bank
+
+</div>
+
+<div class="bank-details-row">
+
+<span class="bank-details-label">Account Number:</span>
+
+09030103904965
+
+</div>
+
+<div class="bank-details-row">
+
+<span class="bank-details-label">IBAN:</span>
+
+PK75MEZN0009030103904965
 
 </div>
 
