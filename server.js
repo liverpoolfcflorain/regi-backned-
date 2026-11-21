@@ -1909,7 +1909,7 @@ app.put(
             <div class="hero">
     
                 <img
-                    src="acmun.png"
+                    src="./acmun.png"
                     alt="ACMUN XVII Logo"
                 >
     
@@ -2313,58 +2313,216 @@ async function sendCompletionEmail({
         `;
 
     const emailHTML = `
-        <!doctype html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-                body { margin: 0; padding: 24px 12px; background: #f4f7f9; color: #18303d; font-family: Arial, Helvetica, sans-serif; }
-                .card { max-width: 680px; margin: 0 auto; overflow: hidden; background: #fff; border: 1px solid #dfe7ec; border-radius: 12px; }
-                .header { padding: 32px 28px; color: #fff; background: #073b55; }
-                .header h1 { margin: 0 0 8px; font-size: 24px; }
-                .header p { margin: 0; color: #d9e7ed; }
-                .content { padding: 28px; }
-                .content p { line-height: 1.6; }
-                .summary { margin: 22px 0; padding: 16px; background: #f4f7f9; border-left: 4px solid #c79a45; }
-                .summary strong { color: #073b55; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-                th, td { padding: 11px 10px; text-align: left; border-bottom: 1px solid #e4ebef; }
-                th { color: #6d7d87; font-size: 11px; letter-spacing: .5px; text-transform: uppercase; }
-                .footer { padding: 20px 28px; color: #6d7d87; background: #f8fafb; font-size: 12px; line-height: 1.5; }
-            </style>
-        </head>
-        <body>
-            <div class="card">
-                <div class="header">
-                    <h1>Registration Confirmed</h1>
-                    <p>ACMUN XVII Secretariat</p>
-                </div>
-                <div class="content">
-                    <p>Dear Delegate,</p>
-                    <p>Your delegation registration has been completed successfully. Please find the current delegation details below.</p>
-                    <div class="summary">
-                        <strong>${escapeEmailHTML(registration.delegation_name || "Delegation")}</strong><br>
-                        ${escapeEmailHTML(registration.institution_name || "Institution")}<br>
-                        Status: <strong>${escapeEmailHTML(registration.status || "Completed")}</strong>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Delegate</th>
-                                <th>Committee</th>
-                                <th>Allotment</th>
-                            </tr>
-                        </thead>
-                        <tbody>${delegateRows}</tbody>
-                    </table>
-                    <p>If you have any questions, please contact the ACMUN XVII Secretariat.</p>
-                </div>
-                <div class="footer">Annual Conference Model United Nations<br>ACMUN XVII Secretariat</div>
-            </div>
-        </body>
-        </html>
-    `;
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<style>
+
+body {
+    margin: 0;
+    padding: 0;
+    background: #00426f;
+    font-family: Georgia, serif;
+    color: #ece7dd;
+}
+
+.wrapper {
+    width: 100%;
+    padding: 40px 0;
+}
+
+.card {
+    max-width: 700px;
+    margin: auto;
+    background: #171717;
+    border: 1px solid #2d2d2d;
+}
+
+.hero {
+    padding: 45px 20px;
+    text-align: center;
+    background: linear-gradient(90deg, #00426f, #173d6f);
+}
+
+.hero img {
+    width: 115px;
+    height: 115px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 24px;
+}
+
+.hero h1 {
+    margin: 0;
+    color: white;
+    font-size: 32px;
+    letter-spacing: 4px;
+}
+
+.content {
+    padding: 50px;
+}
+
+h2 {
+    color: white;
+    font-size: 28px;
+}
+
+p {
+    color: #dddddd;
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+.summary {
+    margin: 30px 0;
+    padding: 25px;
+    background: #101010;
+    border: 1px solid #b89b4e;
+}
+
+.summary-label {
+    color: #b89b4e;
+    font-size: 14px;
+    letter-spacing: 2px;
+}
+
+.summary-value {
+    margin-top: 10px;
+    color: white;
+    font-size: 22px;
+}
+
+table {
+    width: 100%;
+    margin: 30px 0;
+    border-collapse: collapse;
+    color: #dddddd;
+    font-size: 14px;
+}
+
+th, td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid #2d2d2d;
+}
+
+th {
+    color: #b89b4e;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.footer {
+    padding: 30px;
+    text-align: center;
+    border-top: 1px solid #2d2d2d;
+    color: #9d9d9d;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="wrapper">
+
+<div class="card">
+
+<div class="hero">
+
+ <img src='acmun.png' alt='ACMUN logo'>
+
+ <h1>ACMUN XVII</h1>
+
+</div>
+
+<div class="content">
+
+<h2>
+Registration Confirmed
+</h2>
+
+<p>
+Dear
+<strong>
+${escapeEmailHTML(registration.head_delegate_name || "Delegate")}
+</strong>,
+</p>
+
+<p>
+Your delegation registration has been completed successfully.
+Please find the final delegation details below.
+</p>
+
+<div class="summary">
+
+<div class="summary-label">
+DELEGATION
+</div>
+
+<div class="summary-value">
+${escapeEmailHTML(registration.delegation_name || "Delegation")}
+</div>
+
+<p>
+<strong>Institution:</strong>
+${escapeEmailHTML(registration.institution_name || "—")}
+<br>
+<strong>Status:</strong>
+${escapeEmailHTML(registration.status || "Completed")}
+</p>
+
+</div>
+
+<table>
+
+<thead>
+<tr>
+<th>Delegate</th>
+<th>Committee</th>
+<th>Allotment</th>
+</tr>
+</thead>
+
+<tbody>
+${delegateRows}
+</tbody>
+
+</table>
+
+<p>
+If you have any questions regarding your registration or allotments,
+please contact the ACMUN XVII Secretariat.
+</p>
+
+</div>
+
+<div class="footer">
+
+ACMUN XVII SECRETARIAT
+
+<br><br>
+
+© ACMUN XVII
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+
+</html>
+
+`;
 
     await transporter.sendMail({
         from: process.env.SMTP_FROM || process.env.SMTP_USER,
