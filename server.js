@@ -2098,6 +2098,99 @@ app.post(
 );
 
 
+/* ==========================================================
+   PAYMENT COMPLETED EMAIL ROUTE
+========================================================== */
+app.post(
+    "/api/admin/registrations/:id/payment-completed",
+    requireAdmin,
+    async (req, res) => {
+        try {
+            const { id } = req.params;
+            const amount = Number(req.body?.amount);
+
+            if (!Number.isFinite(amount) || amount <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    error: "A valid payment amount is required."
+                });
+            }
+
+            const { data: registration, error } = await supabase
+                .from("registrations")
+                .select("id, head_delegate_name, head_delegate_email, staff_advisor_email, institution_name, delegation_name")
+                .eq("id", id)
+                .single();
+
+            if (error || !registration) {
+                return res.status(404).json({
+                    success: false,
+                    error: "Registration not found."
+                });
+            }
+
+            await sendPaymentCompletedEmail({ registration, amount });
+
+            return res.json({
+                success: true,
+                message: "Payment-completed email sent."
+            });
+        } catch (error) {
+            console.error("PAYMENT COMPLETED EMAIL ERROR:", error);
+            return res.status(500).json({
+                success: false,
+                error: "Unable to send payment-completed email."
+            });
+        }
+    }
+);
+
+async function sendPaymentCompletedEmail({ registration, amount }) {
+    const recipients = [
+        registration.head_delegate_email,
+        registration.staff_advisor_email
+    ]
+        .map(email => String(email || "").trim())
+        .filter(email => email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+
+    if (recipients.length === 0) {
+        throw new Error("No valid email recipients found.");
+    }
+
+    const formattedAmount = `PKR ${amount.toLocaleString("en-PK", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+    })}`;
+    const recipientName = escapeEmailHTML(registration.head_delegate_name || "Delegate");
+    const institution = escapeEmailHTML(registration.institution_name || "—");
+    const delegation = escapeEmailHTML(registration.delegation_name || "—");
+
+    await transporter.sendMail({
+        from: process.env.SMTP_FROM,
+        to: recipients.join(","),
+        subject: "ACMUN XVII — Payment Completed",
+        text: `Dear ${registration.head_delegate_name || "Delegate"},\n\nYour payment has been completed successfully. Amount received: ${formattedAmount}.\nInstitution: ${registration.institution_name || "—"}\nDelegation: ${registration.delegation_name || "—"}\n\nThank you,\nACMUN XVII Secretariat`,
+        html: `<!DOCTYPE html>
+<html><body style="margin:0;padding:32px;background:#00426f;font-family:Georgia,serif;color:#ece7dd;">
+  <div style="max-width:640px;margin:auto;background:#171717;border:1px solid #2d2d2d;">
+    <div style="padding:28px;text-align:center;background:#173d6f;"><img src="cid:acmun-logo" alt="ACMUN" style="width:76px;height:76px;object-fit:contain;"></div>
+    <div style="padding:36px;">
+      <h1 style="color:#fff;">Payment Completed</h1>
+      <p>Dear <strong>${recipientName}</strong>,</p>
+      <p>Your payment has been completed successfully. We have received the following amount:</p>
+      <p style="padding:22px;text-align:center;background:#101010;border:1px solid #b89b4e;color:#fff;font-size:28px;"><strong>${formattedAmount}</strong></p>
+      <p><strong>Institution:</strong> ${institution}</p>
+      <p><strong>Delegation:</strong> ${delegation}</p>
+      <p>Thank you for your payment. If you have any questions, please contact the ACMUN XVII Secretariat.</p>
+    </div>
+    <div style="padding:24px;text-align:center;border-top:1px solid #2d2d2d;color:#9d9d9d;">ACMUN XVII SECRETARIAT</div>
+  </div>
+</body></html>`,
+        attachments: [getACMUNLogoAttachment()]
+    });
+}
+
+
 
 
 
